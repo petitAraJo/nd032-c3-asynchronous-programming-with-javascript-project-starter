@@ -79,6 +79,8 @@ async function handleCreateRace() {
 	renderAt("#race", renderRaceStartView());
 
 	// TODO - Get player_id and track_id from the store
+	const track = store.track_id;
+	const player_id = store.player_id;
 
 	// const race = TODO - invoke the API call to create the race, then save the result
 
@@ -179,7 +181,7 @@ function renderRacerCars(racers) {
 
 	return `
 		<ul id="racers">
-			${reuslts}
+			${results}
 		</ul>
 	`;
 }
@@ -318,9 +320,10 @@ function defaultFetchOpts() {
 async function getTracks() {
 	// GET request to `${SERVER}/api/tracks`
 	try {
-		const fetchTrackApi = await fetch(`${SERVER}/api/tracks`);
-		const tracks = await fetchTrackApi.json();
-		console.log({ Tracks: tracks });
+		const getTracks = await fetch(`${SERVER}/api/tracks`);
+		const tracks = await getTracks.json();
+		console.log(tracks);
+		return tracks;
 	} catch (error) {
 		"something wrong to get Tracks API ", console.log(error);
 	}
@@ -329,9 +332,10 @@ async function getTracks() {
 async function getRacers() {
 	// GET request to `${SERVER}/api/cars`
 	try {
-		const fetchRacersApi = await fetch(`${SERVER}/api/cars`);
-		const racers = await fetchRacersApi.json();
-		console.log({ Racers: racers });
+		const getRacers = await fetch(`${SERVER}/api/cars`);
+		const allRacers = await getRacers.json();
+		console.log(allRacers);
+		return allRacers;
 	} catch (error) {
 		"something wrong to get Racers API ", console.log(error);
 	}
@@ -357,7 +361,8 @@ async function getRace(id) {
 	try {
 		const getRaceResponse = await fetch(`${SERVER}/api/races/${id}`);
 		const race = await getRaceResponse.json();
-		// console.log({ Race: race });
+		console.log(race);
+		return race;
 	} catch (error) {
 		"something wrong to getRace ", console.log(error);
 	}
