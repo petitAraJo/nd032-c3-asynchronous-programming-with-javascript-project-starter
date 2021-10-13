@@ -5,6 +5,8 @@ var store = {
 	track_id: undefined,
 	player_id: undefined,
 	race_id: undefined,
+	tracks: {},
+	racers: {},
 };
 
 // We need our javascript to wait until the DOM is loaded
@@ -18,11 +20,15 @@ async function onPageLoad() {
 		getTracks().then((tracks) => {
 			const html = renderTrackCards(tracks);
 			renderAt("#tracks", html);
+			store.tracks = tracks;
+			// console.log(store);
 		});
 
 		getRacers().then((racers) => {
 			const html = renderRacerCars(racers);
 			renderAt("#racers", html);
+			store.racers = racers;
+			// console.log(store);
 		});
 	} catch (error) {
 		console.log("Problem getting tracks and racers ::", error.message);
@@ -75,20 +81,24 @@ async function delay(ms) {
 
 // This async function controls the flow of the race, add the logic and error handling
 async function handleCreateRace() {
+	console.log(store);
+	const selectedTrack = store.tracks.find((item) => {
+		return item.id == store.track_id;
+	});
+	console.log(selectedTrack);
 	// render starting UI
-	renderAt("#race", renderRaceStartView());
+	renderAt("#race", renderRaceStartView(selectedTrack));
 
 	// TODO - Get player_id and track_id from the store
-	const track = store.track_id;
-	const player_id = store.player_id;
-
+	const selectedPlayer = store.player_id;
 	// const race = TODO - invoke the API call to create the race, then save the result
-
+	const race = await createRace(selectedPlayer, selectedTrack);
+	// console.log(race);
 	// TODO - update the store with the race id
 
 	// The race has been created, now start the countdown
 	// TODO - call the async function runCountdown
-
+	await runCountdown();
 	// TODO - call the async function startRace
 
 	// TODO - call the async function runRace
@@ -145,6 +155,8 @@ function handleSelectPodRacer(target) {
 	target.classList.add("selected");
 
 	// TODO - save the selected racer to the store
+	store.race_id = target.id;
+	// console.log(store);
 }
 
 function handleSelectTrack(target) {
@@ -160,6 +172,8 @@ function handleSelectTrack(target) {
 	target.classList.add("selected");
 
 	// TODO - save the selected track id to the store
+	store.track_id = target.id;
+	// console.log(store);
 }
 
 function handleAccelerate() {
@@ -322,7 +336,7 @@ async function getTracks() {
 	try {
 		const getTracks = await fetch(`${SERVER}/api/tracks`);
 		const tracks = await getTracks.json();
-		console.log(tracks);
+		// console.log(tracks);
 		return tracks;
 	} catch (error) {
 		"something wrong to get Tracks API ", console.log(error);
@@ -334,7 +348,7 @@ async function getRacers() {
 	try {
 		const getRacers = await fetch(`${SERVER}/api/cars`);
 		const allRacers = await getRacers.json();
-		console.log(allRacers);
+		// console.log(allRacers);
 		return allRacers;
 	} catch (error) {
 		"something wrong to get Racers API ", console.log(error);
@@ -362,7 +376,7 @@ async function getRace(id) {
 		const getRaceResponse = await fetch(`${SERVER}/api/races/${id}`);
 		const race = await getRaceResponse.json();
 		console.log(race);
-		return race;
+		// return race;
 	} catch (error) {
 		"something wrong to getRace ", console.log(error);
 	}
