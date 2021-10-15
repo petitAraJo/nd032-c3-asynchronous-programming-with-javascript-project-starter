@@ -3,8 +3,8 @@
 // The store will hold all information needed globally
 var store = {
 	track_id: undefined,
-	player_id: undefined,
 	race_id: undefined,
+	player_id: undefined,
 	tracks: {},
 	racers: {},
 };
@@ -85,23 +85,27 @@ async function handleCreateRace() {
 	const selectedTrack = store.tracks.find((item) => {
 		return item.id == store.track_id;
 	});
-	console.log(selectedTrack);
+	// console.log({ selectedTrack });
 	// render starting UI
 	renderAt("#race", renderRaceStartView(selectedTrack));
 
 	// TODO - Get player_id and track_id from the store
-	const selectedPlayer = store.player_id;
+	const selectedPlayerId = store.player_id;
+	const selectedTrackId = selectedTrack.id;
 	// const race = TODO - invoke the API call to create the race, then save the result
-	const race = await createRace(selectedPlayer, selectedTrack);
-	// console.log(race);
-	// TODO - update the store with the race id
+	const race = await createRace(selectedPlayerId, selectedTrackId);
+	// console.log({ race });
 
+	// TODO - update the store with the race id
+	store.race_id = race.ID;
+	const realRaceID = race.ID - 1;
 	// The race has been created, now start the countdown
 	// TODO - call the async function runCountdown
 	await runCountdown();
 	// TODO - call the async function startRace
-
+	await startRace(realRaceID);
 	// TODO - call the async function runRace
+	await runRace(realRaceID);
 }
 
 function runRace(raceID) {
@@ -128,14 +132,21 @@ async function runCountdown() {
 		// wait for the DOM to load
 		await delay(1000);
 		let timer = 3;
+		let countDownInterval;
 
-		return new Promise((resolve) => {
-			// TODO - use Javascript's built in setInterval method to count down once per second
-
+		return new Promise((resolve, reject) => {
 			// run this DOM manipulation to decrement the countdown for the user
-			document.getElementById("big-numbers").innerHTML = --timer;
+			function reduceTime() {
+				timer = timer - 1; // timer--
+				document.getElementById("big-numbers").innerHTML = timer;
+				// TODO - use Javascript's built in setInterval method to count down once per second
+				if (timer === 0) {
+					clearInterval(countDownInterval);
+					resolve();
+				}
+			}
 
-			// TODO - if the countdown is done, clear the interval, resolve the promise, and return
+			countDownInterval = setInterval(reduceTime, 1000);
 		});
 	} catch (error) {
 		console.log(error);
@@ -155,7 +166,7 @@ function handleSelectPodRacer(target) {
 	target.classList.add("selected");
 
 	// TODO - save the selected racer to the store
-	store.race_id = target.id;
+	store.player_id = target.id;
 	// console.log(store);
 }
 
@@ -179,6 +190,7 @@ function handleSelectTrack(target) {
 function handleAccelerate() {
 	console.log("accelerate button clicked");
 	// TODO - Invoke the API call to accelerate
+	// accelerate(id);
 }
 
 // HTML VIEWS ------------------------------------------------
@@ -383,15 +395,17 @@ async function getRace(id) {
 }
 
 function startRace(id) {
-	return fetch(`${SERVER}/api/races/${id}/start`, {
-		method: "POST",
-		...defaultFetchOpts(),
-	})
-		.then((res) => res.json())
-		.catch((err) => console.log("Problem with getRace request::", err));
+	return (
+		fetch(`${SERVER}/api/races/${id}/start`, {
+			method: "POST",
+			...defaultFetchOpts(),
+		})
+			// .then((res) => res.json())
+			.catch((err) => console.log("Problem with getRace request::", err))
+	);
 }
 
-function accelerate(id) {
+async function accelerate(id) {
 	// POST request to `${SERVER}/api/races/${id}/accelerate`
 	return fetch(`${SERVER}/api/races/${id}/accelerate`, {
 		method: "POST",
